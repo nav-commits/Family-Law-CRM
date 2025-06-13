@@ -19,7 +19,7 @@ export function DashboardHeader() {
   return (
     <header className="sticky top-0 z-30 bg-background border-b h-16 px-4 flex items-center justify-between">
       <div className="flex items-center gap-2 md:gap-4">
-        <h1 className="text-xl font-bold tracking-tight">Family Law Portal</h1>
+        <h1 className="text-xl font-bold tracking-tight">Ghankas Law Portal</h1>
         <div className="hidden md:flex relative w-64">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input 
@@ -45,7 +45,7 @@ export function DashboardHeader() {
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
               <Avatar className="h-8 w-8">
                 <AvatarImage src="/placeholder-avatar.jpg" alt="User avatar" />
-                <AvatarFallback>JD</AvatarFallback>
+                <AvatarFallback>GL</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
