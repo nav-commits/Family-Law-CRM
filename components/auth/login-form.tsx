@@ -16,7 +16,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { Briefcase, Shield, User } from "lucide-react";
 
-import { auth, db } from "../../lib/firebase"; // adjust if needed
+import { auth, db } from "../../lib/firebase";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -31,7 +31,7 @@ interface LoginFormProps {
   readonly role: "client" | "lawyer";
 }
 
-const AUTHORIZED_LAWYER_EMAILS = ["vik@ghankaslaw.com"]; // authorized lawyer emails
+const AUTHORIZED_LAWYER_EMAILS = ["vik@ghankaslaw.com"];
 
 export function LoginForm({ role }: LoginFormProps) {
   const [email, setEmail] = useState("");

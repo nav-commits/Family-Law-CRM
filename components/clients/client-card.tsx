@@ -51,7 +51,7 @@ function ClientCard({ client }: Readonly<ClientCardProps>) {
             <Badge variant={client.status === 'active' ? 'default' : 'secondary'} className="whitespace-nowrap">
               {client.status}
             </Badge>
-            <Badge
+            {/* <Badge
               variant="outline"
               className={cn(
                 'whitespace-nowrap',
@@ -64,11 +64,11 @@ function ClientCard({ client }: Readonly<ClientCardProps>) {
               )}
             >
               {client.priority}
-            </Badge>
-            <div className="flex items-center text-muted-foreground text-sm whitespace-nowrap">
+            </Badge> */}
+            {/* <div className="flex items-center text-muted-foreground text-sm whitespace-nowrap">
               <Clock className="h-3 w-3 mr-1 flex-shrink-0" />
               {client.billableHours}h
-            </div>
+            </div> */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
