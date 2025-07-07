@@ -25,7 +25,7 @@ export default function ClientPage({ params }: ClientPageProps) {
 
   return (
     <div className="p-6">
-      <Card className="max-w-xl mx-auto">
+      <Card >
         <CardHeader className="flex flex-row items-center gap-4">
           <Avatar className="h-12 w-12">
             <AvatarFallback>{client.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
