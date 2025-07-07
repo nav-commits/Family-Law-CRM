@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { 
-  Users, Files, Clock, FileText, BarChart, Calendar,
-  Settings, ChevronLeft, ChevronRight
+  Users, Clock, FileText, ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 interface NavItem {
