@@ -81,9 +81,8 @@ export function ClientList() {
           <Tabs defaultValue="pending">
             <TabsList className="mb-4 flex-wrap">
               <TabsTrigger value="all">All</TabsTrigger>
-
-              <TabsTrigger value="active">Active</TabsTrigger>
               <TabsTrigger value="pending">Pending</TabsTrigger>
+              <TabsTrigger value="active">Active</TabsTrigger>
               <TabsTrigger value="closed">Closed</TabsTrigger>
             </TabsList>
 

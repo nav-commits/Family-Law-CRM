@@ -51,26 +51,20 @@ export function LoginForm({ role }: LoginFormProps) {
         if (role === "lawyer" && !AUTHORIZED_LAWYER_EMAILS.includes(email)) {
           throw new Error("Only authorized lawyers can register.");
         }
-
         // 🆕 Create Firebase Auth user
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           email,
           password
         );
-
         const uid = userCredential.user.uid;
         console.log("✅ User registered. UID:", uid);
-
-        // 💾 Save user role in Firestore
         try {
           await setDoc(doc(db, "users", uid), {
             email,
             role,
           });
-          console.log("✅ User saved to Firestore:", uid);
         } catch (firestoreError) {
-          console.error("❌ Firestore write failed:", firestoreError);
           throw new Error("Failed to save user role to Firestore.");
         }
 
@@ -78,35 +72,26 @@ export function LoginForm({ role }: LoginFormProps) {
           title: "Registration successful",
           description: `Welcome ${role === "lawyer" ? "lawyer" : "client"}!`,
         });
-
         router.push(role === "lawyer" ? "/dashboard" : "/client-intake");
       } else {
-        // 🔐 Login flow
         const userCredential = await signInWithEmailAndPassword(
           auth,
           email,
           password
         );
-
         const uid = userCredential.user.uid;
-        console.log("🔐 Login successful. UID:", uid);
-
-        // 📄 Get user role from Firestore
+        console.log("Login successful. UID:", uid);
         const userDoc = await getDoc(doc(db, "users", uid));
 
         if (!userDoc.exists()) {
           throw new Error("User role not found in Firestore.");
         }
-
         const userData = userDoc.data();
-        console.log("📄 Retrieved Firestore data:", userData);
-
         if (userData.role !== role) {
           throw new Error(
             `Incorrect role. You’re trying to login as ${role}, but your account is ${userData.role}.`
           );
         }
-
         toast({
           title: "Login successful",
           description: `Welcome to your ${role} dashboard`,
@@ -115,7 +100,7 @@ export function LoginForm({ role }: LoginFormProps) {
         router.push(role === "lawyer" ? "/dashboard" : "/client-intake");
       }
     } catch (error: any) {
-      console.error("🚨 Auth Error:", error.message);
+      console.error("Auth Error:", error.message);
       toast({
         variant: "destructive",
         title: "Authentication failed",
