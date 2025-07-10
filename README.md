@@ -7,8 +7,7 @@ A lightweight lawyer dashboard built with **Next.js**, **TypeScript**, **Tailwin
 ## ✅ Key Features
 
 - 🔐 Secure Login (Firebase Auth)
-- 📋 Client List + Profiles
-- 📝 Notes & File Uploads
+- 📋 Client List + Profiles + 📝 Notes & File Uploads
 - ⏱ Time Tracking (Manual logs)
 - 🧾 Invoice Generator (PDF Export)
 
