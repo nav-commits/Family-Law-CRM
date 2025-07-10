@@ -21,17 +21,14 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import {
-  doc,
-  setDoc,
-  getDoc,
-} from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 
 interface LoginFormProps {
   readonly role: "client" | "lawyer";
 }
 
-const AUTHORIZED_LAWYER_EMAILS = ["vik@ghankaslaw.com"];
+const AUTHORIZED_LAWYER_EMAILS =
+  process.env.NEXT_PUBLIC_AUTHORIZED_LAWYER_EMAILS || "";
 
 export function LoginForm({ role }: LoginFormProps) {
   const [email, setEmail] = useState("");
@@ -47,18 +44,15 @@ export function LoginForm({ role }: LoginFormProps) {
 
     try {
       if (isRegister) {
-        // 🔐 Block unauthorized lawyer registrations
         if (role === "lawyer" && !AUTHORIZED_LAWYER_EMAILS.includes(email)) {
           throw new Error("Only authorized lawyers can register.");
         }
-        // 🆕 Create Firebase Auth user
         const userCredential = await createUserWithEmailAndPassword(
           auth,
           email,
           password
         );
         const uid = userCredential.user.uid;
-        console.log("✅ User registered. UID:", uid);
         try {
           await setDoc(doc(db, "users", uid), {
             email,
@@ -67,7 +61,6 @@ export function LoginForm({ role }: LoginFormProps) {
         } catch (firestoreError) {
           throw new Error("Failed to save user role to Firestore.");
         }
-
         toast({
           title: "Registration successful",
           description: `Welcome ${role === "lawyer" ? "lawyer" : "client"}!`,
@@ -80,7 +73,6 @@ export function LoginForm({ role }: LoginFormProps) {
           password
         );
         const uid = userCredential.user.uid;
-        console.log("Login successful. UID:", uid);
         const userDoc = await getDoc(doc(db, "users", uid));
 
         if (!userDoc.exists()) {

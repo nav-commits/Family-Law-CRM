@@ -7,13 +7,11 @@ import {
   CardHeader,
   CardTitle,
   CardContent,
-  CardDescription,
   CardFooter,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 import { db } from "@/lib/firebase";
 import { doc, getDoc, updateDoc, Timestamp } from "firebase/firestore";
@@ -23,6 +21,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { ClientData } from "@/types/client-data";
 
 interface ClientPageProps {
   params: {
@@ -30,49 +29,40 @@ interface ClientPageProps {
   };
 }
 
-interface Client {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  caseType: string;
-  description: string;
-  dateOfBirth?: string;
-  address?: string;
-  contactMethod?: string;
-  maritalStatus?: string;
-  children?: string;
-  employment?: string;
-  income?: string;
-  hasLawyer?: string;
-  status: string;
-  priority: string;
-  billableHours?: number;
-  lastActivity?: string;
-  notes?: string;
-  files?: { name: string; url: string }[];
+function getNestedValue(obj: any, path: string) {
+  return path.split(".").reduce((acc, part) => (acc ? acc[part] : ""), obj);
+}
+
+function setNestedValue(obj: any, path: string, value: any) {
+  const keys = path.split(".");
+  const lastKey = keys.pop()!;
+  let nested = obj;
+  for (const key of keys) {
+    if (!(key in nested)) nested[key] = {};
+    nested = nested[key];
+  }
+  nested[lastKey] = value;
 }
 
 export default function ClientPage({ params }: ClientPageProps) {
   const user = useAuth();
   const router = useRouter();
+  const { toast } = useToast();
 
-  const [client, setClient] = useState<Client | null>(null);
+  const [client, setClient] = useState<ClientData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
-  const [formData, setFormData] = useState<Client | null>(null);
-  const { toast } = useToast();
+  const [formData, setFormData] = useState<ClientData | null>(null);
 
-   // Redirect if not authenticated
-   useEffect(() => {
+  useEffect(() => {
     if (user === null) {
-      router.replace("/"); // or "/" depending on your app
+      router.replace("/");
     }
   }, [user, router]);
 
   useEffect(() => {
-    const fetchClient = async () => {
+    async function fetchClient() {
       try {
         setLoading(true);
         const docRef = doc(db, "clients", params.id);
@@ -81,62 +71,47 @@ export default function ClientPage({ params }: ClientPageProps) {
         if (!docSnap.exists()) {
           setError("Client not found");
           setClient(null);
+          setFormData(null);
         } else {
           const data = docSnap.data();
-          const clientData: Client = {
-            id: docSnap.id,
-            name: data.name || "",
-            email: data.email || "",
-            phone: data.phone || "",
-            caseType: data.caseType || "",
-            description: data.description || "",
-            dateOfBirth: data.dateOfBirth || "",
-            address: data.address || "",
-            contactMethod: data.contactMethod || "",
-            maritalStatus: data.maritalStatus || "",
-            children: data.children || "",
-            employment: data.employment || "",
-            income: data.income || "",
-            hasLawyer: data.hasLawyer || "",
-            status: data.status || "unknown",
-            priority: data.priority || "low",
-            billableHours: data.billableHours || 0,
-            lastActivity: data.lastActivity || "N/A",
-            notes: data.notes || "",
-            files: data.files || [],
-          };
+          const clientData = { id: docSnap.id, ...data } as ClientData;
           setClient(clientData);
           setFormData(clientData);
           setError(null);
         }
       } catch (err) {
-        console.error("Failed to fetch client:", err);
+        console.error(err);
         setError("Failed to fetch client data");
         setClient(null);
+        setFormData(null);
       } finally {
         setLoading(false);
       }
-    };
-
+    }
     fetchClient();
   }, [params.id]);
 
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     if (!formData) return;
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    const newFormData = JSON.parse(JSON.stringify(formData));
+    setNestedValue(newFormData, name, value);
+    setFormData(newFormData);
   };
 
   const handleSave = async () => {
     if (!formData) return;
     try {
+      const updateData = { ...formData };
+      delete updateData.id;
+
       await updateDoc(doc(db, "clients", params.id), {
-        ...formData,
+        ...updateData,
         lastActivity: Timestamp.now().toDate().toISOString(),
       });
+
       setClient(formData);
       toast({ title: "Success", description: "Client data updated" });
       setEditMode(false);
@@ -160,112 +135,194 @@ export default function ClientPage({ params }: ClientPageProps) {
       </div>
     );
 
+  const fields = [
+    "clientInfo.howHeard",
+    "clientInfo.name",
+    "clientInfo.dateOfBirth",
+    "clientInfo.placeOfBirth",
+    "clientInfo.citizenship",
+    "clientInfo.surnameAtBirth",
+    "clientInfo.arrivedInBC",
+    "clientInfo.usCitizen",
+    "clientInfo.address",
+    "clientInfo.mailingAddress",
+    "clientInfo.home",
+    "clientInfo.work",
+    "clientInfo.mobile",
+    "clientInfo.email",
+    "clientInfo.occupation",
+    "clientInfo.employer",
+    "clientInfo.annualIncome",
+    "clientInfo.otherIncome",
+    "adverseParty.name",
+    "adverseParty.surnameAtBirth",
+    "adverseParty.otherNames",
+    "adverseParty.dateOfBirth",
+    "adverseParty.placeOfBirth",
+    "adverseParty.address",
+    "adverseParty.arrivedInBC",
+    "adverseParty.occupation",
+    "adverseParty.employer",
+    "adverseParty.income",
+    "adverseParty.otherIncome",
+    "adverseParty.lawyer.name",
+    "adverseParty.lawyer.firm",
+    "adverseParty.lawyer.address",
+    "adverseParty.lawyer.phone",
+    "adverseParty.lawyer.fax",
+    "adverseParty.lawyer.email",
+    "relationship.cohabitationDate",
+    "relationship.marriageDate",
+    "relationship.marriagePlace",
+    "relationship.separationDate",
+    "relationship.hasAgreement",
+    "relationship.divorced",
+    "relationship.hasMarriageCertificate",
+    "children.details",
+    "children.custodySought",
+    "children.custodyTerms",
+    "assets.summary",
+    "assets.rrsp",
+    "assets.privatePensions",
+    "assets.investments",
+    "assets.businessInterests",
+    "assets.automobiles",
+    "assets.debts",
+    "notes",
+  ];
+
+  const textareaFields = new Set([
+    "clientInfo.otherIncome",
+    "adverseParty.otherIncome",
+    "children.custodyTerms",
+    "children.details",
+    "assets.summary",
+    "notes",
+  ]);
+
   return (
-    <div className="p-6 max-w-3xl mx-auto">
+    <div className="p-6 max-w-4xl mx-auto">
       <Card>
         <CardHeader className="flex gap-4">
           <Avatar className="h-12 w-12">
             <AvatarFallback>
-              {client.name
+              {client.clientInfo.name
                 .split(" ")
                 .map((n) => n[0])
                 .join("")}
             </AvatarFallback>
           </Avatar>
           <div>
-            <CardTitle>{client.name}</CardTitle>
-            <CardDescription>{client.caseType}</CardDescription>
+            <CardTitle>{client.clientInfo.name}</CardTitle>
+            <div className="flex gap-3 flex-wrap mt-1">
+              <Badge
+                variant={client.status === "pending" ? "secondary" : "default"}
+              >
+                {client.status}
+              </Badge>
+              <Badge variant="outline" className="capitalize">
+                {client.priority || "low"}
+              </Badge>
+              <div className="flex items-center text-muted-foreground text-sm">
+                <Clock className="h-3 w-3 mr-1" />
+                {client.billableHours ?? 0}h
+              </div>
+            </div>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-6">
-          <div className="flex gap-3 flex-wrap">
-            <Badge
-              variant={client.status === "active" ? "default" : "secondary"}
-            >
-              {client.status}
-            </Badge>
-            <Badge
-              variant="outline"
-              className={cn(
-                client.priority === "high" &&
-                  "border-red-200 bg-red-50 text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-300",
-                client.priority === "medium" &&
-                  "border-yellow-200 bg-yellow-50 text-yellow-700 dark:border-yellow-800 dark:bg-yellow-950 dark:text-yellow-300",
-                client.priority === "low" &&
-                  "border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300"
-              )}
-            >
-              {client.priority}
-            </Badge>
-            <div className="flex items-center text-muted-foreground text-sm">
-              <Clock className="h-3 w-3 mr-1" />
-              {client.billableHours}h
-            </div>
-          </div>
-
-          {/* Editable fields */}
           {editMode ? (
             <>
-              {[
-                "email",
-                "phone",
-                "dateOfBirth",
-                "address",
-                "contactMethod",
-                "maritalStatus",
-                "children",
-                "employment",
-                "income",
-                "hasLawyer",
-              ].map((field) => (
-                <div className="space-y-2" key={field}>
-                  <label className="font-medium capitalize">{field.replace(/([A-Z])/g, ' $1')}</label>
-                  <Input
-                    name={field}
-                    value={(formData as any)[field] || ""}
-                    onChange={handleChange}
-                  />
+              {/* Editable Status */}
+              <div className="space-y-1">
+                <label htmlFor="status" className="font-medium">
+                  Status
+                </label>
+                <select
+                  id="status"
+                  name="status"
+                  className="w-full border border-input bg-background p-2 rounded-md"
+                  value={formData?.status || "pending"}
+                  onChange={(e) =>
+                    setFormData((prev) =>
+                      prev ? { ...prev, status: e.target.value as ClientData["status"] } : prev
+                    )
+                  }
+                >
+                  <option value="pending">Pending</option>
+                  <option value="active">Active</option>
+                  <option value="closed">Closed</option>
+                </select>
+              </div>
+
+              {/* All other fields */}
+              {fields.map((field) => (
+                <div key={field} className="space-y-1">
+                  <label htmlFor={field} className="font-medium capitalize">
+                    {field
+                      .split(".")
+                      .slice(-1)[0]
+                      .replace(/([A-Z])/g, " $1")
+                      .replace(/_/g, " ")
+                      .replace(/\b\w/g, (l) => l.toUpperCase())}
+                  </label>
+                  {textareaFields.has(field) ? (
+                    <Textarea
+                      id={field}
+                      name={field}
+                      value={getNestedValue(formData, field) || ""}
+                      onChange={handleChange}
+                      rows={4}
+                    />
+                  ) : (
+                    <Input
+                      id={field}
+                      name={field}
+                      value={getNestedValue(formData, field) || ""}
+                      onChange={handleChange}
+                      type={
+                        field.includes("Date") ||
+                        [
+                          "clientInfo.dateOfBirth",
+                          "relationship.marriageDate",
+                          "relationship.separationDate",
+                          "relationship.cohabitationDate",
+                          "adverseParty.dateOfBirth",
+                        ].includes(field)
+                          ? "date"
+                          : "text"
+                      }
+                    />
+                  )}
                 </div>
               ))}
-              <div className="space-y-2">
-                <label className="font-medium">Case Details</label>
-                <Textarea
-                  name="description"
-                  value={formData?.description || ""}
-                  onChange={handleChange}
-                  rows={4}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="font-medium">Lawyer Notes</label>
-                <Textarea
-                  name="notes"
-                  value={formData?.notes || ""}
-                  onChange={handleChange}
-                  rows={4}
-                />
-              </div>
             </>
           ) : (
             <>
-              <p><strong>Email:</strong> {client.email}</p>
-              <p><strong>Phone:</strong> {client.phone}</p>
-              <p><strong>Date of Birth:</strong> {client.dateOfBirth}</p>
-              <p><strong>Address:</strong> {client.address}</p>
-              <p><strong>Preferred Contact:</strong> {client.contactMethod}</p>
-              <p><strong>Marital Status:</strong> {client.maritalStatus}</p>
-              <p><strong>Children:</strong> {client.children}</p>
-              <p><strong>Employment:</strong> {client.employment}</p>
-              <p><strong>Income:</strong> {client.income}</p>
-              <p><strong>Had Lawyer Before:</strong> {client.hasLawyer}</p>
-              <p><strong>Case Details:</strong> {client.description}</p>
-              <p><strong>Lawyer Notes:</strong> {client.notes || "No notes yet."}</p>
+              {fields.map((field) => {
+                const value = getNestedValue(client, field);
+                if (!value) return null;
+                return (
+                  <p key={field}>
+                    <strong>
+                      {field
+                        .split(".")
+                        .slice(-1)[0]
+                        .replace(/([A-Z])/g, " $1")
+                        .replace(/_/g, " ")
+                        .replace(/\b\w/g, (l) => l.toUpperCase())}
+                      :
+                    </strong>{" "}
+                    {value}
+                  </p>
+                );
+              })}
             </>
           )}
         </CardContent>
 
-        <CardFooter className="flex gap-3 justify-end">
+        <CardFooter className="flex justify-end gap-3">
           {editMode ? (
             <>
               <Button

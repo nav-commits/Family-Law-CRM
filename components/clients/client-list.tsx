@@ -14,10 +14,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ClientCard from "./client-card";
 
 import { db } from "../../lib/firebase";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import {
+  collection,
+  getDocs,
+  query,
+  orderBy,
+  Timestamp,
+} from "firebase/firestore";
+import { ClientData } from "@/types/client-data";
 
 export function ClientList() {
-  const [clients, setClients] = useState<any[]>([]);
+  const [clients, setClients] = useState<ClientData[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -29,12 +36,15 @@ export function ClientList() {
         const q = query(clientsRef, orderBy("createdAt", "desc"));
         const snapshot = await getDocs(q);
 
-        const clientsData = snapshot.docs.map((doc) => {
+        const clientsData: ClientData[] = snapshot.docs.map((doc) => {
           const data = doc.data();
           return {
             id: doc.id,
             ...data,
-            createdAt: data.createdAt?.toDate() || null,
+            createdAt:
+              data.createdAt instanceof Timestamp
+                ? data.createdAt.toDate()
+                : new Date(data.createdAt),
           };
         });
 
@@ -49,11 +59,11 @@ export function ClientList() {
     fetchClients();
   }, []);
 
-  const filteredClients = clients.filter(
-    (client) =>
-      client.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      client.caseType?.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredClients = clients.filter((client) =>
+    client.clientInfo?.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const tabs = ["pending", "active", "closed"];
 
   return (
     <Card className="h-full">
@@ -81,75 +91,56 @@ export function ClientList() {
           <Tabs defaultValue="pending">
             <TabsList className="mb-4 flex-wrap">
               <TabsTrigger value="all">All</TabsTrigger>
-              <TabsTrigger value="pending">Pending</TabsTrigger>
-              <TabsTrigger value="active">Active</TabsTrigger>
-              <TabsTrigger value="closed">Closed</TabsTrigger>
+              {tabs.map((tab) => (
+                <TabsTrigger key={tab} value={tab}>
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                </TabsTrigger>
+              ))}
             </TabsList>
 
-            <TabsContent value="pending" className="m-0">
-              <div className="flex-col gap-3 flex">
-                {filteredClients.filter((c) => c.status === "pending")
-                  .length === 0 ? (
-                  <p className="text-center text-muted-foreground">
-                    No pending clients found.
-                  </p>
-                ) : (
-                  filteredClients
-                    .filter((client) => client.status === "pending")
-                    .map((client) => (
-                      <ClientCard key={client.id} client={client} />
-                    ))
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="active" className="m-0">
-              <div className="flex-col gap-3 flex">
-                {filteredClients.filter((c) => c.status === "active").length ===
-                0 ? (
-                  <p className="text-center text-muted-foreground">
-                    No active clients found.
-                  </p>
-                ) : (
-                  filteredClients
-                    .filter((client) => client.status === "active")
-                    .map((client) => (
-                      <ClientCard key={client.id} client={client} />
-                    ))
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="closed" className="m-0">
-              <div className="flex-col gap-3 flex">
-                {filteredClients.filter((c) => c.status === "closed").length ===
-                0 ? (
-                  <p className="text-center text-muted-foreground">
-                    No closed clients found.
-                  </p>
-                ) : (
-                  filteredClients
-                    .filter((client) => client.status === "closed")
-                    .map((client) => (
-                      <ClientCard key={client.id} client={client} />
-                    ))
-                )}
-              </div>
-            </TabsContent>
-
-            <TabsContent value="all" className="m-0">
+            {/* All Clients */}
+            <TabsContent value="all">
               <div className="flex-col gap-3 flex">
                 {filteredClients.length === 0 ? (
                   <p className="text-center text-muted-foreground">
                     No clients found.
                   </p>
                 ) : (
-                  filteredClients.map((client) => (
-                    <ClientCard key={client.id} client={client} />
-                  ))
+                  filteredClients
+                    .filter((client) => client.id !== undefined)
+                    .map((client) => (
+                      <ClientCard
+                        key={client.id!}
+                        client={client as ClientData & { id: string }}
+                      />
+                    ))
                 )}
               </div>
             </TabsContent>
+
+            {/* Filtered Tabs */}
+            {tabs.map((tab) => (
+              <TabsContent key={tab} value={tab}>
+                <div className="flex-col gap-3 flex">
+                  {filteredClients.filter((c) => c.status === tab).length === 0 ? (
+                    <p className="text-center text-muted-foreground">
+                      No {tab} clients found.
+                    </p>
+                  ) : (
+                    filteredClients
+                      .filter(
+                        (client) => client.status === tab && client.id !== undefined
+                      )
+                      .map((client) => (
+                        <ClientCard
+                          key={client.id!}
+                          client={client as ClientData & { id: string }}
+                        />
+                      ))
+                  )}
+                </div>
+              </TabsContent>
+            ))}
           </Tabs>
         )}
       </CardContent>
