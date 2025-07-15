@@ -160,17 +160,32 @@ export default function ClientIntakePage() {
         });
         return;
       }
+      // Save intake data to Firestore
       await addDoc(collection(db, "clients"), {
         ...data,
         userId: user?.uid || "",
         status: "pending",
         createdAt: serverTimestamp(),
       });
+
+      // Notify lawyer via your Next.js API route
+      await fetch("/api/notify-lawyer", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          clientName: data.clientInfo.name,
+          clientEmail: data.clientInfo.email,
+        }),
+      });
+
       setSubmitted(true);
       setHasSubmitted(true);
       toast({
         title: "Form submitted",
-        description: "Your intake has been saved.",
+        description:
+          "Your intake has been saved and the lawyer has been notified.",
       });
       reset(defaultValues);
     } catch (error: any) {
@@ -181,6 +196,7 @@ export default function ClientIntakePage() {
       });
     }
   };
+
 
   const handleLogout = async () => {
     try {

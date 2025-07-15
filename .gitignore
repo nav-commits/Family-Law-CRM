@@ -34,3 +34,5 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+crm-law-4e008-firebase-adminsdk-fbsvc-35e837bbc9.json

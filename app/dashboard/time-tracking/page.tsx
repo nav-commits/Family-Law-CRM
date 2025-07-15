@@ -1,6 +1,6 @@
-import { TimeTrackingOverview } from '@/components/time-tracking/time-tracking-overview';
-import { TimeEntryList } from '@/components/time-tracking/time-entry-list';
-import { TimeEntryForm } from '@/components/time-tracking/time-entry-form';
+import { TimeTrackingOverview } from '../../features/time-tracking/time-tracking-overview';
+import { TimeEntryList } from '../../features/time-tracking/time-entry-list';
+import { TimeEntryForm } from '../../features/time-tracking/time-entry-form';
 
 export default function TimeTrackingPage() {
   return (

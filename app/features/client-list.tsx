@@ -11,7 +11,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ClientCard from "./client-card";
+import ClientCard from "../features/client-card";
 
 import { db } from "../../lib/firebase";
 import {
