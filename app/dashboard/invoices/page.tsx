@@ -1,5 +1,5 @@
-import { InvoiceStats } from '@/components/invoices/invoice-stats';
-import { InvoiceList } from '@/components/invoices/invoice-list';
+import { InvoiceStats } from '../../features/invoices/invoice-stats';
+import { InvoiceList } from '../../features/invoices/invoice-list';
 
 export default function InvoicesPage() {
   return (

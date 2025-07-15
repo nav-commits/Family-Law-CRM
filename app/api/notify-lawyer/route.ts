@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import sgMail from "@sendgrid/mail";
 import { adminDb } from "../../../lib/firebase-admin";
-import admin from "firebase-admin"; // <-- import admin for FieldValue
+import admin from "firebase-admin"; 
 
 sgMail.setApiKey(process.env.SENDER_API_KEY!);
 
@@ -16,10 +16,8 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
     const toEmail = process.env.LAWYER_EMAIL;
     const fromEmail = process.env.SENDER_EMAIL;
-
     if (!toEmail || !fromEmail) {
       console.error("Missing LAWYER_EMAIL or SENDER_EMAIL in .env");
       return NextResponse.json(
@@ -27,7 +25,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
     const msg = {
       to: toEmail,
       from: fromEmail,
@@ -43,13 +40,11 @@ export async function POST(request: NextRequest) {
         "X-Mailer": "SendGrid",
       },
     };
-
     await sgMail.send(msg);
-
     await adminDb.collection("notifications").add({
       message: `New client added: ${clientName}`,
       clientEmail,
-      timestamp: admin.firestore.FieldValue.serverTimestamp(), // <-- here
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
       type: "intake_submission",
       read: false,
     });
