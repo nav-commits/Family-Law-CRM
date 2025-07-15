@@ -1,4 +1,4 @@
-import { LoginForm } from '@/components/auth/login-form';
+import { LoginForm } from '../features/login-form';
 
 export default function LawyerLoginPage() {
   return (
